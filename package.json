@@ -1,0 +1,14 @@
+{
+  "name": "nwtest",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./src/index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "kwelsh",
+  "license": "ISC",
+  "devDependencies": {
+    "commonjs": "0.3.8"
+  }
+}

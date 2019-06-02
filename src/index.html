@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+    var fs = require('fs');
+
+    var jsWatcher=fs.watch('./src/js/', function() {
+      location.reload();
+      jsWatcher.close();
+    });
+    
+    var htmlWatcher=fs.watch('./src/styles/', function() {
+      location.reload();
+      htmlWatcher.close();
+    });
+
+    
+    for (let module_name in global.require.cache){
+      delete global.require.cache[module_name]
+    }
+      
+
+    var m = require('./js/Main');
+    var main;
+    window.onload = function () {
+      main = new m.Main(document, console);
+      document.body.appendChild(main.Container);
+    }
+  </script>
+    <title>Main</title>
+    <link rel="stylesheet" type="text/css" href="./styles/stylesheet.css">
+  </head>
+  <body>
+  </body>
+</html>

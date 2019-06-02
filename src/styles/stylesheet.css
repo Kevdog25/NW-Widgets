@@ -1,0 +1,64 @@
+.card {
+/* Add shadows to create the "card" effect */
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+    transition: 0.3s;
+    border-radius: 5px; /* 5px rounded corners */
+    display: inline-block;
+}
+
+/* On mouse-over, add a deeper shadow */
+.card:hover {
+    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+}
+
+/* Add some padding inside the card container */
+.container {
+    padding: 2px 16px;
+}
+
+.k-widget {
+    float: left;
+}
+
+.clear {
+    clear: both
+}
+
+.notransition {
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -o-transition: none !important;
+    transition: none !important;
+}
+
+.selectable:hover {
+    background-color: rgb(167, 167, 250);
+}
+
+.highlighted {
+    background-color: rgb(167, 167, 250);
+}
+
+.dropdown {
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    border-style: solid;
+    border-color: dimgrey;
+    border-radius: 1px; /* 5px rounded corners */
+    left: 0;
+    top: 0;
+    background-color: #fefefe;
+    padding: 1px;
+}
+
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    background-color: #fefefe;
+    padding: 1px;
+}
