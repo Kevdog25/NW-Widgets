@@ -1,9 +1,10 @@
-import {Card} from './Card'
+import { Widget } from "./Widget";
 
-export class TextCard extends Card {
+export class TextCard extends Widget {
     constructor(text : string = '') {
         super();
         this.Container.innerHTML = text;
+        this.Container.classList.add('card');
     }
 
     public setText(text : string){

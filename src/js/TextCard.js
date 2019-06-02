@@ -13,13 +13,14 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-var Card_1 = require("./Card");
+var Widget_1 = require("./Widget");
 var TextCard = /** @class */ (function (_super) {
     __extends(TextCard, _super);
     function TextCard(text) {
         if (text === void 0) { text = ''; }
         var _this = _super.call(this) || this;
         _this.Container.innerHTML = text;
+        _this.Container.classList.add('card');
         return _this;
     }
     TextCard.prototype.setText = function (text) {
@@ -29,5 +30,5 @@ var TextCard = /** @class */ (function (_super) {
         return this.Container.innerHTML;
     };
     return TextCard;
-}(Card_1.Card));
+}(Widget_1.Widget));
 exports.TextCard = TextCard;

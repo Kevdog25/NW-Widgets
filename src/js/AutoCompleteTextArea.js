@@ -65,7 +65,7 @@ var AutoCompleteTextArea = /** @class */ (function (_super) {
         _this.phantom.id = 'input-textarea-caret-position-mirror-div';
         _this.Container.appendChild(_this.phantom);
         _this.Patterns = patterns;
-        _this.textArea.addEventListener('keydown', function (ev) { return _this.moveSelection(ev); });
+        _this.textArea.addEventListener('keydown', function (ev) { return _this.onKeyDown(ev); });
         _this.textArea.addEventListener('keyup', function (ev) { return _this.onKeyUp(ev); });
         _this.textArea.addEventListener('scroll', function (ev) { return _this.resize(); });
         _this.textArea.style.overflow = 'hidden';
@@ -79,8 +79,10 @@ var AutoCompleteTextArea = /** @class */ (function (_super) {
         el.scrollTop = 1;
         el.style.height = (el.scrollHeight - el.clientHeight + parseInt(el.style.height)) + 'px';
     };
-    AutoCompleteTextArea.prototype.moveSelection = function (ev) {
+    AutoCompleteTextArea.prototype.onKeyDown = function (ev) {
         if (this.suggestionsVisible()) {
+            // If we have a drop down showing, redirect certain commands to 
+            // affect the popup instead.
             switch (ev.keyCode) {
                 case 38: { // Up
                     this.highlightSuggestion(this.currentlySelected - 1);
@@ -181,15 +183,13 @@ var AutoCompleteTextArea = /** @class */ (function (_super) {
         this.suggestionBox.style.top = (coords.top + lineHeight + 3) + 'px';
         this.suggestionBox.style.display = 'inline-block';
     };
-    // Inc is the amount to incremenet the index by
+    // Highlight one of the suggestions.
     AutoCompleteTextArea.prototype.highlightSuggestion = function (next) {
-        if (this.currentlySelected >= 0) {
-            this.activeSuggestions[this.currentlySelected].classList.remove('highlighted');
-        }
+        if (!this.suggestionsVisible())
+            return;
+        this.activeSuggestions[this.currentlySelected].classList.remove('highlighted');
         next = Math.max(Math.min(next, this.activeSuggestions.length - 1), 0);
-        if (next >= 0 && next <= this.activeSuggestions.length) {
-            this.activeSuggestions[next].classList.add('highlighted');
-        }
+        this.activeSuggestions[next].classList.add('highlighted');
         this.currentlySelected = next;
     };
     AutoCompleteTextArea.prototype.hideSuggestions = function () {
@@ -205,7 +205,7 @@ var AutoCompleteTextArea = /** @class */ (function (_super) {
         return this.currentlySelected >= 0;
     };
     AutoCompleteTextArea.prototype.applySelection = function () {
-        if (this.currentlySelected < 0)
+        if (!this.suggestionsVisible())
             return;
         var s = this.activeSuggestions[this.currentlySelected].innerText, pos = this.textArea.selectionStart, text = this.textArea.value;
         var currentWord = Utils_1.extractCurrentWord(text, pos);
