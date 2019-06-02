@@ -23,8 +23,8 @@ export class Selector extends Widget {
 
         this.SetOptions(options);
 
-        this.input.onchange = ev => this.autoSelect()
-        this.input.onselect = ev => this.onSelect()
+        this.input.addEventListener('change', ev => this.autoSelect())
+        this.input.addEventListener('select', ev => this.onSelect())
     }
 
     public addSelectListener(f : OnSelectCallback) {
@@ -54,7 +54,6 @@ export class Selector extends Widget {
             }
         }
         if (!found) this.input.value = '';
-
     }
 
     public SetOptions(options : string[]) {

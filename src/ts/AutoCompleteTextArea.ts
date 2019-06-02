@@ -165,7 +165,6 @@ export class AutoCompleteTextArea extends Widget {
         this.suggestionBox.style.display = 'inline-block';
     }
 
-    // Highlight one of the suggestions.
     private highlightSuggestion(next : number){
         if (!this.suggestionsVisible()) return
 
