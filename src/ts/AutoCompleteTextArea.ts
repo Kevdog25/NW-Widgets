@@ -37,7 +37,7 @@ export class AutoCompleteTextArea extends Widget {
         this.Container.appendChild(this.phantom);
 
         this.Patterns = patterns;
-        this.textArea.addEventListener('keydown', (ev) => this.moveSelection(ev));
+        this.textArea.addEventListener('keydown', (ev) => this.onKeyDown(ev));
         this.textArea.addEventListener('keyup', (ev) => this.onKeyUp(ev));
         this.textArea.addEventListener('scroll', (ev) => this.resize());
         this.textArea.style.overflow = 'hidden';
@@ -51,8 +51,10 @@ export class AutoCompleteTextArea extends Widget {
         el.style.height = (el.scrollHeight - el.clientHeight + parseInt(el.style.height)) + 'px';
     }
 
-    private moveSelection(ev : KeyboardEvent) {
+    private onKeyDown(ev : KeyboardEvent) {
         if (this.suggestionsVisible()) {
+            // If we have a drop down showing, redirect certain commands to 
+            // affect the popup instead.
             switch (ev.keyCode) {
                 case 38: { // Up
                     this.highlightSuggestion(this.currentlySelected - 1);
@@ -163,15 +165,13 @@ export class AutoCompleteTextArea extends Widget {
         this.suggestionBox.style.display = 'inline-block';
     }
 
-    // Inc is the amount to incremenet the index by
+    // Highlight one of the suggestions.
     private highlightSuggestion(next : number){
-        if (this.currentlySelected >= 0) {
-            this.activeSuggestions[this.currentlySelected].classList.remove('highlighted');
-        }
+        if (!this.suggestionsVisible()) return
+
+        this.activeSuggestions[this.currentlySelected].classList.remove('highlighted');
         next = Math.max(Math.min(next, this.activeSuggestions.length-1), 0);
-        if (next >= 0 && next <= this.activeSuggestions.length) {
-            this.activeSuggestions[next].classList.add('highlighted');
-        }
+        this.activeSuggestions[next].classList.add('highlighted');
         this.currentlySelected = next;
     }
 
@@ -191,7 +191,7 @@ export class AutoCompleteTextArea extends Widget {
     }
 
     private applySelection() {
-        if (this.currentlySelected < 0) return
+        if (!this.suggestionsVisible()) return
         let s = this.activeSuggestions[this.currentlySelected].innerText,
             pos = this.textArea.selectionStart,
             text = this.textArea.value
