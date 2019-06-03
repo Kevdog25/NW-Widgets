@@ -1,4 +1,5 @@
 import {WebElement} from './WebElement';
+import { setStyles } from './Utils';
 
 /*
     All a Widget is is an object associated with a div
@@ -13,4 +14,12 @@ export class Widget extends WebElement{
             'k-widget'
         );
     }
+
+    /*
+        Overrides default styles for this widget's container.
+    */
+    public SetStyles(styles : {[key : string] : string}) {
+        setStyles(this.Container, styles);
+    }
+
 }

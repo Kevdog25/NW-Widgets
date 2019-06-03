@@ -31,6 +31,10 @@
     transition: none !important;
 }
 
+.selectable {
+    width: 100%;
+}
+
 .selectable:hover {
     background-color: rgb(167, 167, 250);
 }

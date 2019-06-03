@@ -25,6 +25,7 @@ export class Selector extends Widget {
 
         this.input.addEventListener('change', ev => this.autoSelect())
         this.input.addEventListener('select', ev => this.onSelect())
+        
     }
 
     public addSelectListener(f : OnSelectCallback) {

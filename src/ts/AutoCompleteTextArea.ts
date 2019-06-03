@@ -1,5 +1,6 @@
-import {Widget} from './Widget'
-import {extractCurrentWord, removeChildren} from './Utils'
+import { Widget } from './Widget'
+import { extractCurrentWord, removeChildren } from './Utils'
+import { setStyles } from './Utils'
 
 type MatchFinder = (current : RegExpMatchArray) => string[]
 export interface AutoCompletePattern {
@@ -16,8 +17,8 @@ export class AutoCompleteTextArea extends Widget {
 
     phantom : HTMLDivElement;
 
-    activeSuggestions : HTMLSpanElement[] = [];
-    currentlySelected : number = -1;
+    activeSuggestions : HTMLDivElement[] = [];
+    currentlySelected : HTMLDivElement | null = null;
 
     constructor(ghostText : string = '', patterns : AutoCompletePattern[] = []) {
         super();
@@ -40,8 +41,18 @@ export class AutoCompleteTextArea extends Widget {
         this.textArea.addEventListener('keydown', (ev) => this.onKeyDown(ev));
         this.textArea.addEventListener('keyup', (ev) => this.onKeyUp(ev));
         this.textArea.addEventListener('scroll', (ev) => this.resize());
-        this.textArea.style.overflow = 'hidden';
+        this.textArea.addEventListener('focus', (ev) => { setTimeout(() => this.evaluateSuggestions(), 0) });
+        this.textArea.addEventListener('blur', (ev) => this.hideSuggestions())
         this.Container.appendChild(this.textArea)
+
+        setStyles(this.Container, {
+            width : '100%'
+        })
+        setStyles(this.textArea, {
+            overflow : 'hidden',
+            width : '100%',
+            resize : 'none'
+        });
     }
 
     private resize(ev: KeyboardEvent | null = null) {
@@ -52,17 +63,17 @@ export class AutoCompleteTextArea extends Widget {
     }
 
     private onKeyDown(ev : KeyboardEvent) {
-        if (this.suggestionsVisible()) {
+        if (this.currentlySelected) {
             // If we have a drop down showing, redirect certain commands to 
             // affect the popup instead.
             switch (ev.keyCode) {
                 case 38: { // Up
-                    this.highlightSuggestion(this.currentlySelected - 1);
+                    this.rotateSelection(-1);
                     ev.preventDefault();
                     return
                 }
                 case 40: { // Down
-                    this.highlightSuggestion(this.currentlySelected + 1);
+                    this.rotateSelection(1);
                     ev.preventDefault();
                     return
                 }
@@ -102,8 +113,43 @@ export class AutoCompleteTextArea extends Widget {
                 return
         }
 
+        this.evaluateSuggestions();
+    }
+
+    private showSuggestions(suggestions : string[]) {
+        if(suggestions.length == 0) return
+
+        let lastSelectedString = ''
+        if (this.currentlySelected) {
+            lastSelectedString = this.currentlySelected.innerText;
+        }
+
+        this.clearSuggestions();
+
+        let startHighlight = 0;
+        suggestions.forEach(s => {
+            if (s == lastSelectedString) startHighlight = this.activeSuggestions.length;
+            let el = this.document.createElement('div');
+            el.innerText = s;
+            el.classList.add('selectable');
+            el.onclick = (ev) => {
+                this.currentlySelected = el
+                this.applySelection();
+                this.textArea.focus();
+            }
+            this.activeSuggestions.push(el)
+            this.suggestionBox.appendChild(el);
+        });
+        this.placeSuggestionPopup();
+        this.highlightSuggestion(this.activeSuggestions[startHighlight]);
+    }
+
+    private evaluateSuggestions() {
         let found = false;
         let currentWord = extractCurrentWord(this.textArea.value, this.textArea.selectionStart);
+        this.console.log(currentWord)
+        this.console.log(this.textArea.value)
+        this.console.log(this.textArea.selectionStart)
         for (let i = 0; i < this.Patterns.length; i++) {
             let pattern = this.Patterns[i];
             pattern.Match.lastIndex = 0;
@@ -123,33 +169,6 @@ export class AutoCompleteTextArea extends Widget {
         }
     }
 
-    private showSuggestions(suggestions : string[]) {
-        let lastSelectedString = ''
-        if (this.suggestionsVisible()) {
-            lastSelectedString = this.activeSuggestions[this.currentlySelected].innerText;
-        }
-
-        this.clearSuggestions();
-
-        let startHighlight = 0;
-        suggestions.forEach(s => {
-            if (s == lastSelectedString) startHighlight = this.activeSuggestions.length;
-            let el = this.document.createElement('span');
-            el.innerText = s;
-            el.classList.add('selectable');
-            el.onclick = (ev) => {
-                this.currentlySelected = this.activeSuggestions.indexOf(el);
-                this.applySelection();
-                this.textArea.focus();
-            }
-            this.activeSuggestions.push(el)
-            this.suggestionBox.appendChild(el);
-            this.suggestionBox.appendChild(this.document.createElement('br'));
-        });
-        this.placeSuggestionPopup();
-        this.highlightSuggestion(startHighlight);
-    }
-
     private placeSuggestionPopup() {
         let currentWord = extractCurrentWord(this.textArea.value, this.textArea.selectionStart);
         let startPos = this.textArea.value.indexOf(currentWord, this.textArea.selectionStart - currentWord.length)
@@ -165,13 +184,20 @@ export class AutoCompleteTextArea extends Widget {
         this.suggestionBox.style.display = 'inline-block';
     }
 
-    private highlightSuggestion(next : number){
-        if (!this.suggestionsVisible()) return
+    private rotateSelection(dir : number) {
+        if (!this.currentlySelected) return
+        let next = this.activeSuggestions.indexOf(this.currentlySelected) + dir;
+        next = Math.max(Math.min(next, this.activeSuggestions.length - 1), 0);
 
-        this.activeSuggestions[this.currentlySelected].classList.remove('highlighted');
-        next = Math.max(Math.min(next, this.activeSuggestions.length-1), 0);
-        this.activeSuggestions[next].classList.add('highlighted');
-        this.currentlySelected = next;
+        this.currentlySelected.classList.remove('highlighted');
+        this.highlightSuggestion(this.activeSuggestions[next]);
+    }
+
+    private highlightSuggestion(el : HTMLDivElement){
+        if (!this.suggestionsVisible()) return
+        
+        el.classList.add('highlighted');
+        this.currentlySelected = el
     }
 
     private hideSuggestions() {
@@ -182,16 +208,16 @@ export class AutoCompleteTextArea extends Widget {
     private clearSuggestions() {
         removeChildren(this.suggestionBox);
         this.activeSuggestions = []
-        this.currentlySelected = -1;
+        this.currentlySelected = null;
     }
 
     private suggestionsVisible() : boolean {
-        return this.currentlySelected >= 0;
+        return this.suggestionBox.style.display != 'none';
     }
 
     private applySelection() {
-        if (!this.suggestionsVisible()) return
-        let s = this.activeSuggestions[this.currentlySelected].innerText,
+        if (!this.currentlySelected) return
+        let s = this.currentlySelected.innerText,
             pos = this.textArea.selectionStart,
             text = this.textArea.value
         let currentWord = extractCurrentWord(text, pos);

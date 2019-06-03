@@ -17,15 +17,17 @@ export class Main extends Application {
             MatchFinder : (s : RegExpMatchArray) => {return this.getSuggestion(s)}
         }]);
         this.Container.appendChild(ta.Container);
+        ta.SetStyles({
+            width : '200px'
+        })
+        this.Container.style.width = '100%';
     }
 
     private getSuggestion(match : RegExpMatchArray) : string[] {
         let s = match[1];
-
         let filtered = this.options.filter(op => {
             return op.toUpperCase().indexOf(s.toUpperCase()) >= 0;
         })
-        this.console.log('String: ' + s + ' | ' + filtered)
         return filtered
     }
 

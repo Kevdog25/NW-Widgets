@@ -36,6 +36,10 @@ var Main = /** @class */ (function (_super) {
                 MatchFinder: function (s) { return _this.getSuggestion(s); }
             }]);
         _this.Container.appendChild(ta.Container);
+        ta.SetStyles({
+            width: '200px'
+        });
+        _this.Container.style.width = '100%';
         return _this;
     }
     Main.prototype.getSuggestion = function (match) {
@@ -43,7 +47,6 @@ var Main = /** @class */ (function (_super) {
         var filtered = this.options.filter(function (op) {
             return op.toUpperCase().indexOf(s.toUpperCase()) >= 0;
         });
-        this.console.log('String: ' + s + ' | ' + filtered);
         return filtered;
     };
     return Main;

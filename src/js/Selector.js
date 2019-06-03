@@ -28,8 +28,8 @@ var Selector = /** @class */ (function (_super) {
         _this.Container.appendChild(_this.input);
         _this.Container.appendChild(_this.datalist);
         _this.SetOptions(options);
-        _this.input.onchange = function (ev) { return _this.autoSelect(); };
-        _this.input.onselect = function (ev) { return _this.onSelect(); };
+        _this.input.addEventListener('change', function (ev) { return _this.autoSelect(); });
+        _this.input.addEventListener('select', function (ev) { return _this.onSelect(); });
         return _this;
     }
     Selector.prototype.addSelectListener = function (f) {

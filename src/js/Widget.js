@@ -14,6 +14,11 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var WebElement_1 = require("./WebElement");
+var Utils_1 = require("./Utils");
+/*
+    All a Widget is is an object associated with a div
+    somewhere in the document.
+*/
 var Widget = /** @class */ (function (_super) {
     __extends(Widget, _super);
     function Widget() {
@@ -22,6 +27,12 @@ var Widget = /** @class */ (function (_super) {
         _this.Container.classList.add('k-widget');
         return _this;
     }
+    /*
+        Overrides default styles for this widget's container.
+    */
+    Widget.prototype.SetStyles = function (styles) {
+        Utils_1.setStyles(this.Container, styles);
+    };
     return Widget;
 }(WebElement_1.WebElement));
 exports.Widget = Widget;
