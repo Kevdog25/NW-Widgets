@@ -1,5 +1,5 @@
 import {Application} from './Application'
-import { AutoCompleteTextArea } from './AutoCompleteTextArea';
+import { AutoCompleteTextArea, InputSuggestion } from './AutoCompleteTextArea';
 import {nextRow} from './Utils'
 
 
@@ -13,31 +13,42 @@ export class Main extends Application {
         this.Container.appendChild(nextRow());
 
         let ta = new AutoCompleteTextArea('ooooo spooky', [{
-            Match : /@(.*)/g,
+            Match : /\[\[(.*)(\]\])?/g,
             MatchFinder : (s : RegExpMatchArray) => {return this.getSuggestion(s)}
         }]);
         this.Container.appendChild(ta.Container);
-        ta.SetStyles({
-            width : '200px'
-        })
-        this.Container.style.width = '100%';
+        this.Container.style.width = '80%';
     }
 
-    private getSuggestion(match : RegExpMatchArray) : string[] {
+    private getSuggestion(match : RegExpMatchArray) : InputSuggestion[] {
         let s = match[1];
         let filtered = this.options.filter(op => {
-            return op.toUpperCase().indexOf(s.toUpperCase()) >= 0;
+            return op.ReplacementString.toUpperCase().indexOf(s.toUpperCase()) >= 0;
         })
         return filtered
     }
 
-    options : string[] = [
-        'Jordan',
-        'Kevin',
-        'Alice',
-        'Adrian',
-        'Matt',
-        'Matt and Jordan'
+    options : InputSuggestion[] = [
+        {
+            DisplayHTML : 'Jordan',
+            ReplacementString : '[[Jordan]]'
+        },
+        {
+            DisplayHTML : '<b>Kevin</b>',
+            ReplacementString : '[[Kevin]]'
+        },
+        {
+            DisplayHTML : 'Alice',
+            ReplacementString : '[[Alice]]'
+        },
+        {
+            DisplayHTML : 'Adrian',
+            ReplacementString : '[[Adrian]]'
+        },
+        {
+            DisplayHTML : 'Jordan and Matt',
+            ReplacementString : '[[Jordan and Matt]]'
+        },
     ]
 }  
 

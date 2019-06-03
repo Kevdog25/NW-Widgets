@@ -21,31 +21,42 @@ var Main = /** @class */ (function (_super) {
     function Main(document_in, console_in) {
         var _this = _super.call(this, document_in, console_in) || this;
         _this.options = [
-            'Jordan',
-            'Kevin',
-            'Alice',
-            'Adrian',
-            'Matt',
-            'Matt and Jordan'
+            {
+                DisplayHTML: 'Jordan',
+                ReplacementString: '[[Jordan]]'
+            },
+            {
+                DisplayHTML: '<b>Kevin</b>',
+                ReplacementString: '[[Kevin]]'
+            },
+            {
+                DisplayHTML: 'Alice',
+                ReplacementString: '[[Alice]]'
+            },
+            {
+                DisplayHTML: 'Adrian',
+                ReplacementString: '[[Adrian]]'
+            },
+            {
+                DisplayHTML: 'Jordan and Matt',
+                ReplacementString: '[[Jordan and Matt]]'
+            },
         ];
         var tb = new AutoCompleteTextArea_1.AutoCompleteTextArea('offsetter');
         _this.Container.appendChild(tb.Container);
         _this.Container.appendChild(Utils_1.nextRow());
         var ta = new AutoCompleteTextArea_1.AutoCompleteTextArea('ooooo spooky', [{
-                Match: /@(.*)/g,
+                Match: /\[\[(.*)(\]\])?/g,
                 MatchFinder: function (s) { return _this.getSuggestion(s); }
             }]);
         _this.Container.appendChild(ta.Container);
-        ta.SetStyles({
-            width: '200px'
-        });
-        _this.Container.style.width = '100%';
+        _this.Container.style.width = '80%';
         return _this;
     }
     Main.prototype.getSuggestion = function (match) {
         var s = match[1];
         var filtered = this.options.filter(function (op) {
-            return op.toUpperCase().indexOf(s.toUpperCase()) >= 0;
+            return op.ReplacementString.toUpperCase().indexOf(s.toUpperCase()) >= 0;
         });
         return filtered;
     };

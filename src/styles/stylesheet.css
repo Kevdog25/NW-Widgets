@@ -45,7 +45,8 @@
 
 .dropdown {
     box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
-    display: none; /* Hidden by default */
+    visibility: hidden; /* Hidden by default */
+    display: inline-block;
     position: fixed; /* Stay in place */
     z-index: 1; /* Sit on top */
     border-style: solid;

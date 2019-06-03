@@ -1,11 +1,23 @@
 import { Widget } from './Widget'
 import { extractCurrentWord, removeChildren } from './Utils'
 import { setStyles } from './Utils'
+import { stat } from 'fs';
 
-type MatchFinder = (current : RegExpMatchArray) => string[]
+type MatchFinder = (current : RegExpMatchArray) => InputSuggestion[]
+
+export interface InputSuggestion {
+    ReplacementString : string,
+    DisplayHTML : string
+}
+
 export interface AutoCompletePattern {
     Match : RegExp
     MatchFinder : MatchFinder
+}
+
+interface Suggestion {
+    ReplacementString : string
+    Div : HTMLDivElement
 }
 
 export class AutoCompleteTextArea extends Widget {
@@ -17,8 +29,9 @@ export class AutoCompleteTextArea extends Widget {
 
     phantom : HTMLDivElement;
 
-    activeSuggestions : HTMLDivElement[] = [];
-    currentlySelected : HTMLDivElement | null = null;
+    activeSuggestions : Suggestion[] = [];
+    currentlySelected : Suggestion | null = null;
+    mouseSelection : Suggestion | null = null
 
     constructor(ghostText : string = '', patterns : AutoCompletePattern[] = []) {
         super();
@@ -42,7 +55,7 @@ export class AutoCompleteTextArea extends Widget {
         this.textArea.addEventListener('keyup', (ev) => this.onKeyUp(ev));
         this.textArea.addEventListener('scroll', (ev) => this.resize());
         this.textArea.addEventListener('focus', (ev) => { setTimeout(() => this.evaluateSuggestions(), 0) });
-        this.textArea.addEventListener('blur', (ev) => this.hideSuggestions())
+        this.textArea.addEventListener('blur', (ev) => this.onblur());
         this.Container.appendChild(this.textArea)
 
         setStyles(this.Container, {
@@ -53,6 +66,99 @@ export class AutoCompleteTextArea extends Widget {
             width : '100%',
             resize : 'none'
         });
+    }
+
+
+    private evaluateSuggestions() {
+        let found = false;
+        let currentWord = extractCurrentWord(this.textArea.value, this.textArea.selectionStart);
+        for (let i = 0; i < this.Patterns.length; i++) {
+            let pattern = this.Patterns[i];
+            pattern.Match.lastIndex = 0;
+            let match = pattern.Match.exec(currentWord);
+            if (match != null && match[0].length == currentWord.length) {
+                let results = pattern.MatchFinder(match)
+                if (results.length > 0 && 
+                    results.filter(r => {return r.ReplacementString == currentWord}).length == 0) {
+                    this.showSuggestions(results);
+                    found = true;
+                }
+                break;
+            }
+        }
+
+        if (!found) {
+            this.hideSuggestions();
+        }
+    }
+
+    private showSuggestions(suggestions : InputSuggestion[]) {
+        if(suggestions.length == 0) return
+
+        // Here I am storing off the replacement string for the current selected
+        // suggestion. This is to maintain the users current selection even if the list changes.
+        // I am not sure if its better or worse to compare the replacement strings or the 
+        // display strings here. It probably doesn't matter.
+        let lastSelectedString = ''
+        if (this.currentlySelected) {
+            lastSelectedString = this.currentlySelected.ReplacementString; 
+        }
+
+        this.clearSuggestions();
+
+        // Start at -1 here so we can tell whether or not we 
+        // selected one of the new suggestions yet in the loop.
+        // Default to 0 later.
+        let startHighlight = -1; 
+        suggestions.forEach(s => {
+            if (s.ReplacementString == lastSelectedString && startHighlight < 0) startHighlight = this.activeSuggestions.length;
+            let el = this.document.createElement('div'),
+                suggestion = {
+                    ReplacementString : s.ReplacementString,
+                    Div : el
+                };
+
+            el.innerHTML = s.DisplayHTML;
+            el.classList.add('selectable');
+            el.onmouseover = (ev) => {
+                this.mouseSelection = suggestion
+            }
+            this.activeSuggestions.push(suggestion)
+            this.suggestionBox.appendChild(el);
+        });
+        this.placeSuggestionPopup();
+        startHighlight = Math.max(startHighlight, 0);
+        this.highlightSuggestion(this.activeSuggestions[startHighlight]);
+    }
+
+    private placeSuggestionPopup() {
+        let currentWord = extractCurrentWord(this.textArea.value, this.textArea.selectionStart);
+        let startPos = this.textArea.value.indexOf(currentWord, this.textArea.selectionStart - currentWord.length)
+        let coords = this.getCoordinates(startPos);
+
+        let s = window.getComputedStyle(this.textArea);
+        let lineHeight = parseInt(s.lineHeight || '0');
+        if (isNaN(lineHeight)){
+            lineHeight = parseInt(s.fontSize || '0');
+        }
+        this.suggestionBox.style.left = coords.left + 'px';
+        this.suggestionBox.style.top = (coords.top + lineHeight + 3) + 'px';
+        this.suggestionBox.style.visibility = 'visible';
+    }
+
+    private hideSuggestions() {
+        this.suggestionBox.style.visibility = 'hidden';
+        this.clearSuggestions();
+    }
+
+    private onblur() {
+        // If we lose focus to one of our suggestions, 
+        // assume its becasue it was clicked and grab the focus back.
+        if (this.mouseSelection){
+            this.highlightSuggestion(this.mouseSelection);
+            this.applySelection();
+            this.textArea.focus(); 
+        }
     }
 
     private resize(ev: KeyboardEvent | null = null) {
@@ -101,8 +207,9 @@ export class AutoCompleteTextArea extends Widget {
         }
 
         // Keys that hide suggestions - 
-        if (ev.keyCode == 27) {
+        if (ev.keyCode == 27 || ev.keyCode == 8) {
             this.hideSuggestions();
+            return
         }
 
         // If they aren't useful for autocomplete, just forget it.
@@ -116,99 +223,28 @@ export class AutoCompleteTextArea extends Widget {
         this.evaluateSuggestions();
     }
 
-    private showSuggestions(suggestions : string[]) {
-        if(suggestions.length == 0) return
-
-        let lastSelectedString = ''
-        if (this.currentlySelected) {
-            lastSelectedString = this.currentlySelected.innerText;
-        }
-
-        this.clearSuggestions();
-
-        let startHighlight = 0;
-        suggestions.forEach(s => {
-            if (s == lastSelectedString) startHighlight = this.activeSuggestions.length;
-            let el = this.document.createElement('div');
-            el.innerText = s;
-            el.classList.add('selectable');
-            el.onclick = (ev) => {
-                this.currentlySelected = el
-                this.applySelection();
-                this.textArea.focus();
-            }
-            this.activeSuggestions.push(el)
-            this.suggestionBox.appendChild(el);
-        });
-        this.placeSuggestionPopup();
-        this.highlightSuggestion(this.activeSuggestions[startHighlight]);
-    }
-
-    private evaluateSuggestions() {
-        let found = false;
-        let currentWord = extractCurrentWord(this.textArea.value, this.textArea.selectionStart);
-        this.console.log(currentWord)
-        this.console.log(this.textArea.value)
-        this.console.log(this.textArea.selectionStart)
-        for (let i = 0; i < this.Patterns.length; i++) {
-            let pattern = this.Patterns[i];
-            pattern.Match.lastIndex = 0;
-            let match = pattern.Match.exec(currentWord);
-            if (match != null && match[0].length == currentWord.length) {
-                let results = pattern.MatchFinder(match)
-                if (results.length > 0) {
-                    this.showSuggestions(results);
-                    found = true;
-                }
-                break;
-            }
-        }
-
-        if (!found) {
-            this.hideSuggestions();
-        }
-    }
-
-    private placeSuggestionPopup() {
-        let currentWord = extractCurrentWord(this.textArea.value, this.textArea.selectionStart);
-        let startPos = this.textArea.value.indexOf(currentWord, this.textArea.selectionStart - currentWord.length)
-        let coords = this.getCoordinates(startPos);
-
-        let s = window.getComputedStyle(this.textArea);
-        let lineHeight = parseInt(s.lineHeight || '0');
-        if (isNaN(lineHeight)){
-            lineHeight = parseInt(s.fontSize || '0');
-        }
-        this.suggestionBox.style.left = coords.left + 'px';
-        this.suggestionBox.style.top = (coords.top + lineHeight + 3) + 'px';
-        this.suggestionBox.style.display = 'inline-block';
-    }
-
     private rotateSelection(dir : number) {
         if (!this.currentlySelected) return
         let next = this.activeSuggestions.indexOf(this.currentlySelected) + dir;
         next = Math.max(Math.min(next, this.activeSuggestions.length - 1), 0);
 
-        this.currentlySelected.classList.remove('highlighted');
+        this.currentlySelected.Div.classList.remove('highlighted');
         this.highlightSuggestion(this.activeSuggestions[next]);
     }
 
-    private highlightSuggestion(el : HTMLDivElement){
+    private highlightSuggestion(s : Suggestion){
         if (!this.suggestionsVisible()) return
         
-        el.classList.add('highlighted');
-        this.currentlySelected = el
+        s.Div.classList.add('highlighted');
+        this.currentlySelected = s
     }
 
-    private hideSuggestions() {
-        this.suggestionBox.style.display = 'none';
-        this.clearSuggestions();
-    }
 
     private clearSuggestions() {
         removeChildren(this.suggestionBox);
         this.activeSuggestions = []
         this.currentlySelected = null;
+        this.mouseSelection = null;
     }
 
     private suggestionsVisible() : boolean {
@@ -217,7 +253,7 @@ export class AutoCompleteTextArea extends Widget {
 
     private applySelection() {
         if (!this.currentlySelected) return
-        let s = this.currentlySelected.innerText,
+        let s = this.currentlySelected.ReplacementString,
             pos = this.textArea.selectionStart,
             text = this.textArea.value
         let currentWord = extractCurrentWord(text, pos);

@@ -24,6 +24,7 @@ var AutoCompleteTextArea = /** @class */ (function (_super) {
         var _this = _super.call(this) || this;
         _this.activeSuggestions = [];
         _this.currentlySelected = null;
+        _this.mouseSelection = null;
         _this.properties = [
             'direction',
             'box-sizing',
@@ -70,7 +71,7 @@ var AutoCompleteTextArea = /** @class */ (function (_super) {
         _this.textArea.addEventListener('keyup', function (ev) { return _this.onKeyUp(ev); });
         _this.textArea.addEventListener('scroll', function (ev) { return _this.resize(); });
         _this.textArea.addEventListener('focus', function (ev) { setTimeout(function () { return _this.evaluateSuggestions(); }, 0); });
-        _this.textArea.addEventListener('blur', function (ev) { return _this.hideSuggestions(); });
+        _this.textArea.addEventListener('blur', function (ev) { return _this.onblur(); });
         _this.Container.appendChild(_this.textArea);
         Utils_2.setStyles(_this.Container, {
             width: '100%'
@@ -82,6 +83,89 @@ var AutoCompleteTextArea = /** @class */ (function (_super) {
         });
         return _this;
     }
+    AutoCompleteTextArea.prototype.evaluateSuggestions = function () {
+        var found = false;
+        var currentWord = Utils_1.extractCurrentWord(this.textArea.value, this.textArea.selectionStart);
+        for (var i = 0; i < this.Patterns.length; i++) {
+            var pattern = this.Patterns[i];
+            pattern.Match.lastIndex = 0;
+            var match = pattern.Match.exec(currentWord);
+            if (match != null && match[0].length == currentWord.length) {
+                var results = pattern.MatchFinder(match);
+                if (results.length > 0 &&
+                    results.filter(function (r) { return r.ReplacementString == currentWord; }).length == 0) {
+                    this.showSuggestions(results);
+                    found = true;
+                }
+                break;
+            }
+        }
+        if (!found) {
+            this.hideSuggestions();
+        }
+    };
+    AutoCompleteTextArea.prototype.showSuggestions = function (suggestions) {
+        var _this = this;
+        if (suggestions.length == 0)
+            return;
+        // Here I am storing off the replacement string for the current selected
+        // suggestion. This is to maintain the users current selection even if the list changes.
+        // I am not sure if its better or worse to compare the replacement strings or the 
+        // display strings here. It probably doesn't matter.
+        var lastSelectedString = '';
+        if (this.currentlySelected) {
+            lastSelectedString = this.currentlySelected.ReplacementString;
+        }
+        this.clearSuggestions();
+        // Start at -1 here so we can tell whether or not we 
+        // selected one of the new suggestions yet in the loop.
+        // Default to 0 later.
+        var startHighlight = -1;
+        suggestions.forEach(function (s) {
+            if (s.ReplacementString == lastSelectedString && startHighlight < 0)
+                startHighlight = _this.activeSuggestions.length;
+            var el = _this.document.createElement('div'), suggestion = {
+                ReplacementString: s.ReplacementString,
+                Div: el
+            };
+            el.innerHTML = s.DisplayHTML;
+            el.classList.add('selectable');
+            el.onmouseover = function (ev) {
+                _this.mouseSelection = suggestion;
+            };
+            _this.activeSuggestions.push(suggestion);
+            _this.suggestionBox.appendChild(el);
+        });
+        this.placeSuggestionPopup();
+        startHighlight = Math.max(startHighlight, 0);
+        this.highlightSuggestion(this.activeSuggestions[startHighlight]);
+    };
+    AutoCompleteTextArea.prototype.placeSuggestionPopup = function () {
+        var currentWord = Utils_1.extractCurrentWord(this.textArea.value, this.textArea.selectionStart);
+        var startPos = this.textArea.value.indexOf(currentWord, this.textArea.selectionStart - currentWord.length);
+        var coords = this.getCoordinates(startPos);
+        var s = window.getComputedStyle(this.textArea);
+        var lineHeight = parseInt(s.lineHeight || '0');
+        if (isNaN(lineHeight)) {
+            lineHeight = parseInt(s.fontSize || '0');
+        }
+        this.suggestionBox.style.left = coords.left + 'px';
+        this.suggestionBox.style.top = (coords.top + lineHeight + 3) + 'px';
+        this.suggestionBox.style.visibility = 'visible';
+    };
+    AutoCompleteTextArea.prototype.hideSuggestions = function () {
+        this.suggestionBox.style.visibility = 'hidden';
+        this.clearSuggestions();
+    };
+    AutoCompleteTextArea.prototype.onblur = function () {
+        // If we lose focus to one of our suggestions, 
+        // assume its becasue it was clicked and grab the focus back.
+        if (this.mouseSelection) {
+            this.highlightSuggestion(this.mouseSelection);
+            this.applySelection();
+            this.textArea.focus();
+        }
+    };
     AutoCompleteTextArea.prototype.resize = function (ev) {
         if (ev === void 0) { ev = null; }
         var el = this.textArea;
@@ -125,8 +209,9 @@ var AutoCompleteTextArea = /** @class */ (function (_super) {
             return;
         }
         // Keys that hide suggestions - 
-        if (ev.keyCode == 27) {
+        if (ev.keyCode == 27 || ev.keyCode == 8) {
             this.hideSuggestions();
+            return;
         }
         // If they aren't useful for autocomplete, just forget it.
         // If they are above the normal chars, then ignore it.
@@ -137,91 +222,25 @@ var AutoCompleteTextArea = /** @class */ (function (_super) {
         }
         this.evaluateSuggestions();
     };
-    AutoCompleteTextArea.prototype.showSuggestions = function (suggestions) {
-        var _this = this;
-        if (suggestions.length == 0)
-            return;
-        var lastSelectedString = '';
-        if (this.currentlySelected) {
-            lastSelectedString = this.currentlySelected.innerText;
-        }
-        this.clearSuggestions();
-        var startHighlight = 0;
-        suggestions.forEach(function (s) {
-            if (s == lastSelectedString)
-                startHighlight = _this.activeSuggestions.length;
-            var el = _this.document.createElement('div');
-            el.innerText = s;
-            el.classList.add('selectable');
-            el.onclick = function (ev) {
-                _this.currentlySelected = el;
-                _this.applySelection();
-                _this.textArea.focus();
-            };
-            _this.activeSuggestions.push(el);
-            _this.suggestionBox.appendChild(el);
-        });
-        this.placeSuggestionPopup();
-        this.highlightSuggestion(this.activeSuggestions[startHighlight]);
-    };
-    AutoCompleteTextArea.prototype.evaluateSuggestions = function () {
-        var found = false;
-        var currentWord = Utils_1.extractCurrentWord(this.textArea.value, this.textArea.selectionStart);
-        this.console.log(currentWord);
-        this.console.log(this.textArea.value);
-        this.console.log(this.textArea.selectionStart);
-        for (var i = 0; i < this.Patterns.length; i++) {
-            var pattern = this.Patterns[i];
-            pattern.Match.lastIndex = 0;
-            var match = pattern.Match.exec(currentWord);
-            if (match != null && match[0].length == currentWord.length) {
-                var results = pattern.MatchFinder(match);
-                if (results.length > 0) {
-                    this.showSuggestions(results);
-                    found = true;
-                }
-                break;
-            }
-        }
-        if (!found) {
-            this.hideSuggestions();
-        }
-    };
-    AutoCompleteTextArea.prototype.placeSuggestionPopup = function () {
-        var currentWord = Utils_1.extractCurrentWord(this.textArea.value, this.textArea.selectionStart);
-        var startPos = this.textArea.value.indexOf(currentWord, this.textArea.selectionStart - currentWord.length);
-        var coords = this.getCoordinates(startPos);
-        var s = window.getComputedStyle(this.textArea);
-        var lineHeight = parseInt(s.lineHeight || '0');
-        if (isNaN(lineHeight)) {
-            lineHeight = parseInt(s.fontSize || '0');
-        }
-        this.suggestionBox.style.left = coords.left + 'px';
-        this.suggestionBox.style.top = (coords.top + lineHeight + 3) + 'px';
-        this.suggestionBox.style.display = 'inline-block';
-    };
     AutoCompleteTextArea.prototype.rotateSelection = function (dir) {
         if (!this.currentlySelected)
             return;
         var next = this.activeSuggestions.indexOf(this.currentlySelected) + dir;
         next = Math.max(Math.min(next, this.activeSuggestions.length - 1), 0);
-        this.currentlySelected.classList.remove('highlighted');
+        this.currentlySelected.Div.classList.remove('highlighted');
         this.highlightSuggestion(this.activeSuggestions[next]);
     };
-    AutoCompleteTextArea.prototype.highlightSuggestion = function (el) {
+    AutoCompleteTextArea.prototype.highlightSuggestion = function (s) {
         if (!this.suggestionsVisible())
             return;
-        el.classList.add('highlighted');
-        this.currentlySelected = el;
-    };
-    AutoCompleteTextArea.prototype.hideSuggestions = function () {
-        this.suggestionBox.style.display = 'none';
-        this.clearSuggestions();
+        s.Div.classList.add('highlighted');
+        this.currentlySelected = s;
     };
     AutoCompleteTextArea.prototype.clearSuggestions = function () {
         Utils_1.removeChildren(this.suggestionBox);
         this.activeSuggestions = [];
         this.currentlySelected = null;
+        this.mouseSelection = null;
     };
     AutoCompleteTextArea.prototype.suggestionsVisible = function () {
         return this.suggestionBox.style.display != 'none';
@@ -229,7 +248,7 @@ var AutoCompleteTextArea = /** @class */ (function (_super) {
     AutoCompleteTextArea.prototype.applySelection = function () {
         if (!this.currentlySelected)
             return;
-        var s = this.currentlySelected.innerText, pos = this.textArea.selectionStart, text = this.textArea.value;
+        var s = this.currentlySelected.ReplacementString, pos = this.textArea.selectionStart, text = this.textArea.value;
         var currentWord = Utils_1.extractCurrentWord(text, pos);
         var startPos = text.indexOf(currentWord, pos - currentWord.length), endPos = startPos + currentWord.length;
         this.textArea.value = text.slice(0, startPos) + s + text.slice(endPos, text.length);
