@@ -15,11 +15,12 @@ var __extends = (this && this.__extends) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 var Application_1 = require("./Application");
 var AutoCompleteTextArea_1 = require("./AutoCompleteTextArea");
+var Utils_1 = require("./Utils");
 //import tingo = require('tingodb');
 var Main = /** @class */ (function (_super) {
     __extends(Main, _super);
-    function Main(document_in, console_in) {
-        var _this = _super.call(this, document_in, console_in) || this;
+    function Main(document_in, console_in, window_in) {
+        var _this = _super.call(this, document_in, console_in, window_in) || this;
         _this.names = [
             'Kevin',
             'Kyle',
@@ -29,10 +30,15 @@ var Main = /** @class */ (function (_super) {
         ];
         var ta = new AutoCompleteTextArea_1.AutoCompleteTextArea('', [
             {
-                Match: /\[\[(.*)(\]\])?/,
+                Match: /\[\[(.*)(\]\])?/g,
                 MatchFinder: function (reg) { return _this.getSuggestions(reg); }
             }
         ]);
+        Utils_1.setStyles(_this.Container, {
+            width: '80%',
+            height: '50%',
+            'min-height': '300px'
+        });
         _this.Container.appendChild(ta.Container);
         return _this;
     }

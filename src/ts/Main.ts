@@ -1,5 +1,5 @@
 import {Application} from './Application'
-import { AutoCompleteTextBox, InputSuggestion } from './AutoCompleteTextArea'
+import { AutoCompleteTextArea, InputSuggestion } from './AutoCompleteTextArea'
 import { setStyles } from './Utils';
 
 //import tingo = require('tingodb');
@@ -9,7 +9,7 @@ export class Main extends Application {
     constructor(document_in : Document, console_in : Console, window_in : Window) {
         super(document_in, console_in, window_in);
 
-        let ta = new AutoCompleteTextBox([
+        let ta = new AutoCompleteTextArea('',[
             {
                 Match : /\[\[(.*)(\]\])?/g,
                 MatchFinder : (reg : RegExpMatchArray) => this.getSuggestions(reg)
