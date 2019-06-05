@@ -8,9 +8,11 @@ import {globals} from './Globals';
 export class WebElement {
     document : Document;
     console : Console;
+    window : Window;
 
     constructor() {
         this.document = globals.document;
         this.console = globals.console;
+        this.window = globals.window;
     }
 }

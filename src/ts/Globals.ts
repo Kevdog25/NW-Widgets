@@ -1,6 +1,7 @@
 class Globals {
     public document! : Document;
     public console! : Console;
+    public window! : Window;
 }
 
 
