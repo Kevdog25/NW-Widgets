@@ -1,7 +1,6 @@
 import { Widget } from './Widget'
 import { extractCurrentWord, removeChildren } from './Utils'
 import { setStyles } from './Utils'
-import { stat } from 'fs';
 
 type MatchFinder = (current : RegExpMatchArray) => InputSuggestion[]
 

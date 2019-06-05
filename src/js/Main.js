@@ -15,50 +15,40 @@ var __extends = (this && this.__extends) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 var Application_1 = require("./Application");
 var AutoCompleteTextArea_1 = require("./AutoCompleteTextArea");
-var Utils_1 = require("./Utils");
+//import tingo = require('tingodb');
 var Main = /** @class */ (function (_super) {
     __extends(Main, _super);
     function Main(document_in, console_in) {
         var _this = _super.call(this, document_in, console_in) || this;
-        _this.options = [
-            {
-                DisplayHTML: 'Jordan',
-                ReplacementString: '[[Jordan]]'
-            },
-            {
-                DisplayHTML: '<b>Kevin</b>',
-                ReplacementString: '[[Kevin]]'
-            },
-            {
-                DisplayHTML: 'Alice',
-                ReplacementString: '[[Alice]]'
-            },
-            {
-                DisplayHTML: 'Adrian',
-                ReplacementString: '[[Adrian]]'
-            },
-            {
-                DisplayHTML: 'Jordan and Matt',
-                ReplacementString: '[[Jordan and Matt]]'
-            },
+        _this.names = [
+            'Kevin',
+            'Kyle',
+            'Adrian',
+            'Alice',
+            'Jordan'
         ];
-        var tb = new AutoCompleteTextArea_1.AutoCompleteTextArea('offsetter');
-        _this.Container.appendChild(tb.Container);
-        _this.Container.appendChild(Utils_1.nextRow());
-        var ta = new AutoCompleteTextArea_1.AutoCompleteTextArea('ooooo spooky', [{
-                Match: /\[\[(.*)(\]\])?/g,
-                MatchFinder: function (s) { return _this.getSuggestion(s); }
-            }]);
+        var ta = new AutoCompleteTextArea_1.AutoCompleteTextArea('', [
+            {
+                Match: /\[\[(.*)(\]\])?/,
+                MatchFinder: function (reg) { return _this.getSuggestions(reg); }
+            }
+        ]);
         _this.Container.appendChild(ta.Container);
-        _this.Container.style.width = '80%';
         return _this;
     }
-    Main.prototype.getSuggestion = function (match) {
-        var s = match[1];
-        var filtered = this.options.filter(function (op) {
-            return op.ReplacementString.toUpperCase().indexOf(s.toUpperCase()) >= 0;
+    Main.prototype.getSuggestions = function (reg) {
+        var inputName = reg[1];
+        var validNames = this.names.filter(function (name) {
+            return name.toUpperCase().indexOf(inputName.toUpperCase()) >= 0;
         });
-        return filtered;
+        var suggestions = [];
+        validNames.forEach(function (name) {
+            suggestions.push({
+                DisplayHTML: name,
+                ReplacementString: '[[' + name + ']]'
+            });
+        });
+        return suggestions;
     };
     return Main;
 }(Application_1.Application));

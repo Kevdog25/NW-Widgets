@@ -9,6 +9,10 @@
   "author": "kwelsh",
   "license": "ISC",
   "devDependencies": {
-    "commonjs": "0.3.8"
+    "commonjs": "0.3.8",
+    "tingodb": "^0.6.1"
+  },
+  "window": {
+    "transparent": false
   }
 }

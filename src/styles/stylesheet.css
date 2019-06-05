@@ -36,11 +36,11 @@
 }
 
 .selectable:hover {
-    background-color: rgb(167, 167, 250);
+    background-color: rgba(92, 116, 255, 0.6);
 }
 
 .highlighted {
-    background-color: rgb(167, 167, 250);
+    background-color: rgba(92, 116, 255, 0.267);
 }
 
 .dropdown {
@@ -67,3 +67,12 @@
     background-color: #fefefe;
     padding: 1px;
 }
+
+.floatingBit {
+    visibility: hidden;
+    display: inline-block;
+    position: fixed;
+    z-index: 1;
+    background-color: rbga(0,0,0,0); 
+}
+
