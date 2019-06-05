@@ -10,6 +10,7 @@ var WebElement = /** @class */ (function () {
     function WebElement() {
         this.document = Globals_1.globals.document;
         this.console = Globals_1.globals.console;
+        this.window = Globals_1.globals.window;
     }
     return WebElement;
 }());

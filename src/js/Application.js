@@ -21,9 +21,10 @@ var Widget_1 = require("./Widget");
     This just gives that code access. The base class (WebElement) gives these globals to
     all other objects.
 */
-function setupGlobals(document_in, console_in) {
+function setupGlobals(document_in, console_in, window_in) {
     Globals_1.globals.document = document_in;
     Globals_1.globals.console = console_in;
+    Globals_1.globals.window = window_in;
 }
 /*
     This is the main application code.
@@ -31,9 +32,9 @@ function setupGlobals(document_in, console_in) {
 */
 var Application = /** @class */ (function (_super) {
     __extends(Application, _super);
-    function Application(document_in, console_in) {
+    function Application(document_in, console_in, window_in) {
         var _this = this;
-        setupGlobals(document_in, console_in);
+        setupGlobals(document_in, console_in, window_in);
         _this = _super.call(this) || this;
         return _this;
     }
