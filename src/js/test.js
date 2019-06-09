@@ -16,7 +16,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var Application_1 = require("./Application");
 var AutoCompleteTextArea_1 = require("./AutoCompleteTextArea");
 var Utils_1 = require("./Utils");
-//import tingo = require('tingodb');
 var Test = /** @class */ (function (_super) {
     __extends(Test, _super);
     function Test(document_in, console_in, window_in) {

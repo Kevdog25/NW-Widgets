@@ -2,8 +2,6 @@ import {Application} from './Application'
 import { AutoCompleteTextArea, InputSuggestion } from './AutoCompleteTextArea'
 import { setStyles } from './Utils';
 
-//import tingo = require('tingodb');
-
 
 export class Test extends Application {
     constructor(document_in : Document, console_in : Console, window_in : Window) {
