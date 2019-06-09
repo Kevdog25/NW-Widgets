@@ -32,3 +32,4 @@ var TextCard = /** @class */ (function (_super) {
     return TextCard;
 }(Widget_1.Widget));
 exports.TextCard = TextCard;
+//# sourceMappingURL=TextCard.js.map

@@ -36,3 +36,4 @@ var Widget = /** @class */ (function (_super) {
     return Widget;
 }(WebElement_1.WebElement));
 exports.Widget = Widget;
+//# sourceMappingURL=Widget.js.map

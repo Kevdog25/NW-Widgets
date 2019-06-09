@@ -41,3 +41,4 @@ var Application = /** @class */ (function (_super) {
     return Application;
 }(Widget_1.Widget));
 exports.Application = Application;
+//# sourceMappingURL=Application.js.map

@@ -6,3 +6,4 @@ var Globals = /** @class */ (function () {
     return Globals;
 }());
 exports.globals = new Globals();
+//# sourceMappingURL=Globals.js.map
